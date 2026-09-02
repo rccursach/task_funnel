@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Task Funnel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:ital@1&display=swap">
+<style>
+/* ============================================================
+   Task Funnel — settle by weight, pass one at a time
+   Palette: lab glassware. A teal "fluid", amber for the task
+   under pressure in the throat, muted green for what's decanted.
+   ============================================================ */
+:root{
+  --ground:      #eceff0;
+  --surface:     #ffffff;
+  --surface-sunk:#dae2e4;   /* sediment tint for heavy cards */
+  --ink:         #15252c;
+  --ink-soft:    #4d616a;
+  --ink-faint:   #7f939c;
+  --line:        #d0d9db;
+  --line-strong: #b7c3c6;
+
+  --flow:        #0e7c86;   /* the fluid / accent */
+  --flow-deep:   #0a5960;
+  --flow-wash:   #e0eef0;
+
+  --focus:       #2f6f78;   /* the task you're on — steady, not loud */
+  --focus-wash:  #dfeced;
+
+  --done:        #3d7a58;
+  --done-wash:   #e4eee9;
+
+  --chip-ink:    #566a72;   /* flag labels — quiet, uniform, no alarm */
+  --chip-line:   #c4ced0;
+
+  /* weight -> hue ramp, light theme */
+  --card-bg-s: 52%;  --card-bg-l: 95.5%;
+  --card-bd-s: 38%;  --card-bd-l: 84%;
+  --card-rail-s: 52%; --card-rail-l: 52%;
+  --wnum-s: 46%;     --wnum-l: 33%;
+
+  --danger:      #b23b34;
+  --shadow-sm:   0 1px 2px rgba(20,37,44,.06), 0 1px 3px rgba(20,37,44,.08);
+  --shadow-md:   0 6px 20px rgba(20,37,44,.10), 0 2px 6px rgba(20,37,44,.06);
+  --radius:      10px;
+
+  --step--1: .78rem;
+  --step-0:  .94rem;
+  --step-1:  1.06rem;
+  --step-2:  1.35rem;
+  --step-3:  1.9rem;
+
+  --sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --serif:"IBM Plex Serif", Georgia, serif;
+}
+
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:      #0e1618;
+    --surface:     #162225;
+    --surface-sunk:#213134;
+    --ink:         #e4ecec;
+    --ink-soft:    #9db0b4;
+    --ink-faint:   #6f8388;
+    --line:        #2a3a3e;
+    --line-strong: #3a4c50;
+
+    --flow:        #38a8b1;
+    --flow-deep:   #7ecdd2;
+    --flow-wash:   #16302f;
+
+    --focus:       #6fc3cc;
+    --focus-wash:  #16302f;
+
+    --done:        #5aa47c;
+    --done-wash:   #1c2f28;
+
+    --chip-ink:    #93a6ab;
+    --chip-line:   #3a4c50;
+
+    --card-bg-s: 24%;  --card-bg-l: 13%;
+    --card-bd-s: 22%;  --card-bd-l: 26%;
+    --card-rail-s: 42%; --card-rail-l: 48%;
+    --wnum-s: 46%;     --wnum-l: 72%;
+
+    --danger:      #e0645c;
+    --shadow-sm:   0 1px 2px rgba(0,0,0,.3);
+    --shadow-md:   0 8px 26px rgba(0,0,0,.42);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:      #0e1618;
+  --surface:     #162225;
+  --surface-sunk:#213134;
+  --ink:         #e4ecec;
+  --ink-soft:    #9db0b4;
+  --ink-faint:   #6f8388;
+  --line:        #2a3a3e;
+  --line-strong: #3a4c50;
+
+  --flow:        #38a8b1;
+  --flow-deep:   #7ecdd2;
+  --flow-wash:   #16302f;
+
+  --focus:       #6fc3cc;
+  --focus-wash:  #16302f;
+
+  --done:        #5aa47c;
+  --done-wash:   #1c2f28;
+
+  --chip-ink:    #93a6ab;
+  --chip-line:   #3a4c50;
+
+  --card-bg-s: 24%;  --card-bg-l: 13%;
+  --card-bd-s: 22%;  --card-bd-l: 26%;
+  --card-rail-s: 42%; --card-rail-l: 48%;
+  --wnum-s: 46%;     --wnum-l: 72%;
+
+  --danger:      #e0645c;
+  --shadow-sm:   0 1px 2px rgba(0,0,0,.3);
+  --shadow-md:   0 8px 26px rgba(0,0,0,.42);
+}
+
+*{ box-sizing:border-box; }
+html{ font-size:16px; }
+body{
+  margin:0;
+  font-family:var(--sans);
+  font-size:var(--step-0);
+  line-height:1.5;
+  color:var(--ink);
+  background:var(--ground);
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{ margin:0; font-weight:600; text-wrap:balance; }
+button{ font:inherit; color:inherit; cursor:pointer; }
+:focus-visible{ outline:2px solid var(--flow); outline-offset:2px; border-radius:4px; }
+
+/* ---------- top bar ---------- */
+.topbar{
+  display:flex; align-items:center; gap:20px;
+  padding:14px clamp(16px,4vw,32px);
+  border-bottom:1px solid var(--line);
+  background:var(--surface);
+  position:sticky; top:0; z-index:20;
+}
+.brand{ display:flex; align-items:baseline; gap:10px; }
+.brand__mark{
+  font-size:1.1rem; color:var(--flow);
+  transform:translateY(1px);
+}
+.brand h1{
+  font-size:var(--step-1);
+  letter-spacing:.02em;
+}
+.stats{
+  display:flex; gap:18px; margin-left:8px;
+  font-family:var(--mono); font-size:var(--step--1);
+  color:var(--ink-soft);
+}
+.stats b{ color:var(--ink); font-weight:600; }
+.topbar__actions{ margin-left:auto; display:flex; gap:8px; }
+.topbar__actions button{
+  background:var(--surface); border:1px solid var(--line-strong);
+  border-radius:8px; padding:6px 12px; font-size:var(--step--1);
+  color:var(--ink-soft);
+}
+.topbar__actions button:hover{ border-color:var(--flow); color:var(--flow); }
+
+/* ---------- layout ---------- */
+.layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 344px;
+  gap:26px;
+  max-width:1200px;
+  margin:0 auto;
+  padding:26px clamp(16px,4vw,32px) 64px;
+}
+@media (max-width:900px){
+  .layout{ grid-template-columns:1fr; }
+}
+
+/* ---------- the funnel ---------- */
+.funnel{ position:relative; }
+.funnel__glass{
+  position:absolute; inset:44px 0 0;
+  background:linear-gradient(180deg, var(--flow-wash) 0%, transparent 42%),
+             linear-gradient(180deg, transparent 40%, color-mix(in srgb, var(--surface-sunk) 60%, transparent) 100%);
+  clip-path:polygon(0 0, 100% 0, 80% 100%, 20% 100%);
+  border-inline:1px solid var(--line);
+  border-top:1px solid var(--line);
+  z-index:0;
+  pointer-events:none;
+}
+.funnel__intake{
+  display:flex; align-items:baseline; gap:12px;
+  padding-bottom:12px;
+}
+.funnel__intake h2{ font-size:var(--step-2); letter-spacing:.01em; }
+.funnel__intake p{
+  margin:0; font-family:var(--mono); font-size:var(--step--1);
+  color:var(--ink-faint);
+}
+
+.stream{
+  list-style:none; margin:0;
+  display:flex; flex-direction:column; gap:10px;
+  position:relative; z-index:1;
+  padding:0 clamp(0px, 4vw, 40px) 20px;
+  min-height:120px;
+}
+
+/* a task — hue deepens with weight: pale yellow, lime, forest,
+   turquoise, blue, purple. Purple is heaviest. No red anywhere. */
+.card{
+  --depth:0;
+  --hue:52;
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:stretch;
+  background:hsl(var(--hue) var(--card-bg-s) var(--card-bg-l));
+  border:1px solid hsl(var(--hue) var(--card-bd-s) var(--card-bd-l));
+  border-left:4px solid hsl(var(--hue) var(--card-rail-s) var(--card-rail-l));
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);
+  overflow:hidden;
+  transition:border-color .18s ease, box-shadow .18s ease;
+}
+.card:hover{ box-shadow:var(--shadow-md); }
+.card--next{ box-shadow:0 0 0 2px hsl(var(--hue) var(--card-rail-s) var(--card-rail-l)), var(--shadow-sm); }
+.card__nexttag{
+  font-family:var(--mono); font-size:.6rem; font-weight:600; letter-spacing:.14em;
+  text-transform:uppercase; color:hsl(var(--hue) var(--wnum-s) var(--wnum-l));
+}
+.card__body{
+  display:flex; flex-direction:column; gap:6px; align-items:flex-start;
+  padding:12px 14px;
+  background:none; border:0; text-align:left; width:100%;
+}
+.card__title{
+  font-size:var(--step-1);
+  font-weight:calc(430 + var(--depth) * 160);
+  line-height:1.3;
+}
+.card__meta{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.chip{
+  font-family:var(--mono); font-size:.64rem; font-weight:500;
+  letter-spacing:.06em; text-transform:uppercase;
+  padding:2px 7px; border-radius:5px;
+  color:var(--chip-ink); border:1px solid var(--chip-line);
+  background:none;
+}
+.card__note{
+  font-size:var(--step--1); color:var(--ink-soft);
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.card__side{
+  display:flex; flex-direction:column; align-items:center; justify-content:space-between;
+  gap:8px; padding:12px; border-left:1px solid hsl(var(--hue) var(--card-bd-s) var(--card-bd-l));
+  background:hsl(var(--hue) var(--card-bg-s) calc(var(--card-bg-l) - 2%));
+}
+.card__weight{
+  font-family:var(--mono); font-size:1.15rem; font-weight:600;
+  color:hsl(var(--hue) var(--wnum-s) var(--wnum-l));
+  line-height:1;
+}
+.card__weight span{ display:block; font-size:.55rem; font-weight:500; letter-spacing:.1em; color:var(--ink-faint); text-transform:uppercase; text-align:center; margin-top:3px; }
+.card__pickup{
+  background:var(--flow); color:#fff; border:0;
+  border-radius:7px; padding:7px 12px;
+  font-size:var(--step--1); font-weight:500; white-space:nowrap;
+}
+.card__pickup:hover{ background:var(--flow-deep); }
+.card__pickup:disabled{ background:var(--line-strong); color:var(--ink-faint); cursor:not-allowed; }
+
+/* ---------- the throat ---------- */
+.throat{
+  position:sticky; bottom:16px; z-index:2;
+  width:min(68%, 460px); margin:4px auto 0;
+  border:1.5px solid var(--line-strong);
+  border-radius:12px;
+  background:var(--surface);
+  box-shadow:var(--shadow-md);
+  padding:14px 16px;
+}
+.throat--active{
+  border-color:var(--focus);
+  border-left:4px solid hsl(var(--hue,190) var(--card-rail-s) var(--card-rail-l));
+  box-shadow:0 0 0 3px var(--focus-wash), var(--shadow-md);
+}
+.throat__label{
+  font-family:var(--mono); font-size:.62rem; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink-faint);
+}
+.throat--active .throat__label{ color:var(--focus); }
+.throat h3{ font-size:var(--step-1); margin:4px 0 2px; }
+.throat__note{
+  font-size:var(--step--1); color:var(--ink-soft);
+  white-space:pre-wrap; margin:6px 0 0;
+  max-height:6.5em; overflow:auto;
+}
+.throat__actions{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+.throat__actions button{ border-radius:8px; padding:8px 14px; font-size:var(--step--1); font-weight:500; border:1px solid transparent; }
+.btn-done{ background:var(--done); color:#fff; }
+.btn-done:hover{ filter:brightness(1.06); }
+.btn-ghost{ background:none; border-color:var(--line-strong); color:var(--ink-soft); }
+.btn-ghost:hover{ border-color:var(--ink-soft); color:var(--ink); }
+.throat__rec{ font-size:var(--step--1); color:var(--ink-soft); margin:6px 0 0; }
+.throat__rec b{ color:var(--ink); }
+.throat__empty{ font-family:var(--serif); font-style:italic; color:var(--ink-faint); font-size:var(--step-1); }
+
+/* ---------- right rail ---------- */
+.rail{ display:flex; flex-direction:column; gap:20px; }
+.panel{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  box-shadow:var(--shadow-sm);
+}
+.panel > h2{
+  font-size:var(--step--1); letter-spacing:.12em; text-transform:uppercase;
+  color:var(--ink-faint); margin-bottom:12px;
+}
+
+.composer{ display:flex; flex-direction:column; gap:10px; }
+.composer input[type=text],
+.composer textarea{
+  width:100%; font:inherit; color:var(--ink);
+  background:var(--ground);
+  border:1px solid var(--line-strong); border-radius:8px;
+  padding:9px 11px; resize:vertical;
+}
+.composer textarea{ min-height:58px; font-size:var(--step--1); }
+.composer input::placeholder,
+.composer textarea::placeholder{ color:var(--ink-faint); }
+.toggles{ display:flex; flex-direction:column; gap:6px; border:0; padding:0; margin:0; }
+.toggles label{
+  display:flex; align-items:center; gap:9px;
+  font-size:var(--step--1); cursor:pointer;
+  padding:5px 8px; border-radius:7px;
+  border:1px solid var(--line);
+}
+.toggles label:hover{ border-color:var(--line-strong); }
+.toggles input{ accent-color:var(--flow); width:15px; height:15px; }
+.toggles b{ margin-left:auto; font-family:var(--mono); font-weight:600; color:var(--ink-faint); }
+.toggles label:has(:checked){ background:var(--flow-wash); border-color:var(--flow); }
+.toggles label:has(:checked) b{ color:var(--flow-deep); }
+.composer__foot{ display:flex; align-items:center; gap:10px; }
+.composer__weight{
+  font-family:var(--mono); font-size:var(--step--1); color:var(--ink-faint);
+}
+.composer__weight b{ color:hsl(var(--wh,52) var(--wnum-s) var(--wnum-l)); font-size:var(--step-1); transition:color .18s ease; }
+.composer button[type=submit]{
+  margin-left:auto;
+  background:var(--flow); color:#fff; border:0; border-radius:8px;
+  padding:9px 16px; font-weight:500;
+}
+.composer button[type=submit]:hover{ background:var(--flow-deep); }
+
+.legend{ display:flex; flex-direction:column; gap:9px; font-size:var(--step--1); color:var(--ink-soft); }
+.legend .scale{
+  height:12px; border-radius:999px;
+  background:linear-gradient(90deg,
+    hsl(52 58% 70%), hsl(88 42% 56%), hsl(140 30% 42%),
+    hsl(174 40% 44%), hsl(212 46% 52%), hsl(273 36% 56%));
+}
+.legend .scale-ends{
+  display:flex; justify-content:space-between;
+  font-family:var(--mono); font-size:.6rem; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--ink-faint);
+}
+.legend p{ margin:2px 0 0; color:var(--ink-faint); font-size:.78rem; line-height:1.5; }
+.legend p b{ color:var(--ink-soft); font-weight:600; }
+
+/* ---------- decanted ---------- */
+.decanted ol{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:2px; }
+.done-group{
+  font-family:var(--mono); font-size:.64rem; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--ink-faint); margin:12px 0 4px;
+}
+.done-item{ display:flex; align-items:center; gap:8px; }
+.done-item__body{
+  flex:1; display:flex; align-items:baseline; gap:10px;
+  background:none; border:0; text-align:left; padding:6px 4px;
+  border-radius:6px;
+}
+.done-item__body:hover{ background:var(--done-wash); }
+.done-item__title{
+  text-decoration:line-through;
+  text-decoration-color:var(--ink-faint);
+  color:var(--ink-soft);
+  font-size:var(--step--1);
+}
+.done-item__time{
+  margin-left:auto; font-family:var(--mono); font-size:.7rem; color:var(--ink-faint);
+  white-space:nowrap;
+}
+.done-item__reopen{
+  background:none; border:1px solid var(--line); border-radius:6px;
+  width:26px; height:26px; color:var(--ink-faint); font-size:.9rem;
+  display:grid; place-items:center;
+}
+.done-item__reopen:hover{ border-color:var(--flow); color:var(--flow); }
+.see-more{
+  margin-top:10px; background:none; border:1px solid var(--line-strong);
+  border-radius:7px; padding:6px 12px; font-size:var(--step--1); color:var(--ink-soft);
+}
+.see-more:hover{ border-color:var(--flow); color:var(--flow); }
+.empty{ font-family:var(--serif); font-style:italic; color:var(--ink-faint); font-size:var(--step-0); }
+
+/* ---------- toast ---------- */
+.toast{
+  position:fixed; left:50%; bottom:26px; transform:translateX(-50%);
+  display:flex; align-items:center; gap:14px;
+  background:var(--ink); color:var(--ground);
+  border-radius:10px; padding:11px 16px;
+  font-size:var(--step--1); box-shadow:var(--shadow-md); z-index:40;
+}
+.toast button{
+  background:none; border:1px solid color-mix(in srgb,var(--ground) 40%,transparent);
+  color:var(--ground); border-radius:6px; padding:4px 10px; font-size:var(--step--1);
+}
+.toast button:hover{ background:color-mix(in srgb,var(--ground) 16%,transparent); }
+
+/* ---------- editor dialog ---------- */
+dialog{
+  border:1px solid var(--line-strong); border-radius:14px; padding:0;
+  background:var(--surface); color:var(--ink);
+  box-shadow:var(--shadow-md); width:min(440px, 92vw);
+}
+dialog::backdrop{ background:rgba(20,37,44,.4); backdrop-filter:blur(2px); }
+.editor__form{ display:flex; flex-direction:column; gap:14px; padding:20px; }
+.editor__form h2{ font-size:var(--step-2); }
+.field{ display:flex; flex-direction:column; gap:5px; }
+.field > span{ font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint); }
+.field input, .field textarea{
+  font:inherit; color:var(--ink); background:var(--ground);
+  border:1px solid var(--line-strong); border-radius:8px; padding:9px 11px; resize:vertical;
+}
+.editor__form .toggles{ gap:6px; }
+.editor__actions{ display:flex; align-items:center; gap:8px; margin-top:4px; }
+.editor__actions .spacer{ flex:1; }
+.editor__actions button{ border-radius:8px; padding:8px 14px; font-size:var(--step--1); font-weight:500; border:1px solid var(--line-strong); background:var(--surface); color:var(--ink-soft); }
+.editor__actions .primary{ background:var(--flow); border-color:var(--flow); color:#fff; }
+.editor__actions .primary:hover{ background:var(--flow-deep); }
+.editor__actions .danger{ color:var(--danger); border-color:color-mix(in srgb,var(--danger) 40%,transparent); }
+.editor__actions .danger:hover{ background:color-mix(in srgb,var(--danger) 12%,transparent); }
+
+@media (prefers-reduced-motion: reduce){
+  *{ transition:none !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand__mark">▽</span>
+    <h1>Task Funnel</h1>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="topbar__actions">
+    <button id="exportBtn" type="button">Export</button>
+    <button id="importBtn" type="button">Import</button>
+    <input type="file" id="importFile" accept="application/json" hidden>
+    <button id="themeBtn" type="button" aria-label="Toggle light / dark">◐</button>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="funnel" aria-label="The funnel">
+    <div class="funnel__glass" aria-hidden="true"></div>
+    <div class="funnel__intake">
+      <h2>Intake</h2>
+      <p id="funnelCount"></p>
+    </div>
+    <ol class="stream" id="stream"></ol>
+    <div class="throat" id="throat" aria-live="polite"></div>
+  </section>
+
+  <aside class="rail">
+    <form class="panel composer" id="composer" autocomplete="off">
+      <h2>Drop a task in</h2>
+      <input type="text" id="newTitle" placeholder="What needs doing?" required maxlength="200" aria-label="Task title">
+      <textarea id="newNotes" placeholder="Notes — where you were, the next step…" maxlength="2000" aria-label="Notes"></textarea>
+      <fieldset class="toggles">
+        <label><input type="checkbox" id="newImp"> Important <b>+1</b></label>
+        <label><input type="checkbox" id="newUrg"> Urgent <b>+3</b></label>
+        <label><input type="checkbox" id="newDel"> Delegable <b>+5</b></label>
+      </fieldset>
+      <div class="composer__foot">
+        <span class="composer__weight">weight <b id="newWeight">0</b></span>
+        <button type="submit">Drop in</button>
+      </div>
+    </form>
+
+    <div class="panel legend">
+      <h2>How weight sorts</h2>
+      <div class="scale" aria-hidden="true"></div>
+      <div class="scale-ends"><span>lighter</span><span>heavier</span></div>
+      <p>Weight = <b>important +1</b>, <b>urgent +3</b>, <b>delegable +5</b>, added up. Heavier tasks take a deeper hue and sink toward the throat; delegable ones drift down to clear first. Same weight? Longest waiting goes first. You can still pick up any task at will.</p>
+    </div>
+
+    <section class="panel decanted">
+      <h2>Decanted</h2>
+      <ol id="doneList"></ol>
+      <button class="see-more" id="seeMore" type="button" hidden></button>
+    </section>
+  </aside>
+</main>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<dialog id="editor">
+  <form class="editor__form" method="dialog">
+    <h2>Edit task</h2>
+    <label class="field"><span>Title</span><input type="text" id="edTitle" required maxlength="200"></label>
+    <label class="field"><span>Notes</span><textarea id="edNotes" rows="4" maxlength="2000"></textarea></label>
+    <fieldset class="toggles">
+      <label><input type="checkbox" id="edImp"> Important <b>+1</b></label>
+      <label><input type="checkbox" id="edUrg"> Urgent <b>+3</b></label>
+      <label><input type="checkbox" id="edDel"> Delegable <b>+5</b></label>
+    </fieldset>
+    <div class="editor__actions">
+      <button type="button" class="danger" id="edDelete">Delete</button>
+      <span class="spacer"></span>
+      <button type="button" id="edCancel">Cancel</button>
+      <button type="submit" class="primary" id="edSave">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+"use strict";
+/* ============================================================
+   State
+   ============================================================ */
+const KEY = "task-funnel/v1";
+const THEME_KEY = "task-funnel/theme";
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+let state = load();
+let lastUndo = null;      // { id, prevStatus, prevClosedAt }
+let toastTimer = null;
+let showAllDone = false;
+let editingId = null;
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && Array.isArray(parsed.tasks)) return normalize(parsed);
+    }
+  }catch(err){ console.warn("Task Funnel: could not read storage", err); }
+  return { version:1, tasks:[] };
+}
+function normalize(data){
+  data.tasks = data.tasks.map(t => ({
+    id:        t.id || uid(),
+    title:     String(t.title || "").slice(0,200),
+    notes:     String(t.notes || "").slice(0,2000),
+    important: !!t.important,
+    urgent:    !!t.urgent,
+    delegable: !!t.delegable,
+    createdAt: Number(t.createdAt) || Date.now(),
+    status:    ["funnel","active","done"].includes(t.status) ? t.status : "funnel",
+    closedAt:  t.closedAt ? Number(t.closedAt) : null,
+  }));
+  // enforce single active
+  let seenActive = false;
+  for(const t of data.tasks){
+    if(t.status === "active"){
+      if(seenActive) t.status = "funnel";
+      seenActive = true;
+    }
+  }
+  return { version:1, tasks:data.tasks };
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); }
+  catch(err){ showToast("Couldn't save — storage may be full or blocked."); }
+}
+
+const uid = () => "t" + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const weightOf = t => (t.important?1:0) + (t.urgent?3:0) + (t.delegable?5:0);
+/* weight 0..9 -> hue: pale yellow -> lime -> forest -> turquoise -> blue -> purple */
+const hueFor = w => Math.round(52 + (w / 9) * 221);
+
+// lightest first (floats at the top), heaviest last (sinks to the throat).
+// within equal weight, the oldest task sinks lowest (closest to the neck).
+const funnelTasks = () => state.tasks
+  .filter(t => t.status === "funnel")
+  .sort((a,b) => weightOf(a) - weightOf(b) || b.createdAt - a.createdAt);
+const activeTask = () => state.tasks.find(t => t.status === "active") || null;
+const doneTasks  = () => state.tasks
+  .filter(t => t.status === "done")
+  .sort((a,b) => (b.closedAt||0) - (a.closedAt||0));
+
+/* ============================================================
+   Mutations
+   ============================================================ */
+function addTask(fields){
+  state.tasks.push({
+    id:uid(), title:fields.title.trim(), notes:fields.notes.trim(),
+    important:fields.important, urgent:fields.urgent, delegable:fields.delegable,
+    createdAt:Date.now(), status:"funnel", closedAt:null,
+  });
+  commit();
+}
+function pickUp(id){
+  if(activeTask()){ showToast("One task in the throat at a time. Finish or put it back first."); return; }
+  const t = byId(id); if(!t) return;
+  t.status = "active";
+  commit();
+}
+function putBack(id){
+  const t = byId(id); if(!t) return;
+  t.status = "funnel";
+  commit();
+}
+function markDone(id){
+  const t = byId(id); if(!t) return;
+  lastUndo = { id:t.id, prevStatus:t.status, prevClosedAt:t.closedAt };
+  t.status = "done";
+  t.closedAt = Date.now();
+  commit();
+  showToast("Pushed through.", { label:"Undo", action:undoLast });
+}
+function reopen(id){
+  const t = byId(id); if(!t) return;
+  t.status = "funnel";
+  t.closedAt = null;
+  commit();
+}
+function undoLast(){
+  if(!lastUndo) return;
+  const t = byId(lastUndo.id);
+  if(t){ t.status = lastUndo.prevStatus; t.closedAt = lastUndo.prevClosedAt; commit(); }
+  lastUndo = null;
+  hideToast();
+}
+function saveEdit(id, fields){
+  const t = byId(id); if(!t) return;
+  t.title = fields.title.trim();
+  t.notes = fields.notes.trim();
+  t.important = fields.important;
+  t.urgent = fields.urgent;
+  t.delegable = fields.delegable;
+  commit();
+}
+function deleteTask(id){
+  state.tasks = state.tasks.filter(t => t.id !== id);
+  commit();
+}
+const byId = id => state.tasks.find(t => t.id === id);
+
+function commit(){ save(); render(); }
+
+/* ============================================================
+   Rendering  (with a small FLIP pass for reorder motion)
+   ============================================================ */
+const $ = sel => document.querySelector(sel);
+const stream = $("#stream");
+const throatEl = $("#throat");
+const doneListEl = $("#doneList");
+const seeMoreBtn = $("#seeMore");
+const statsEl = $("#stats");
+
+function render(){
+  const first = snapshotPositions();
+  renderStream();
+  renderThroat();
+  renderDone();
+  renderStats();
+  flip(first);
+}
+
+function snapshotPositions(){
+  const map = new Map();
+  document.querySelectorAll(".stream .card").forEach(el => map.set(el.dataset.id, el.getBoundingClientRect()));
+  return map;
+}
+function flip(first){
+  if(reduceMotion) return;
+  document.querySelectorAll(".stream .card").forEach(el => {
+    const prev = first.get(el.dataset.id);
+    const now = el.getBoundingClientRect();
+    if(!prev){
+      el.animate([{opacity:0, transform:"translateY(-8px)"},{opacity:1, transform:"none"}], {duration:220, easing:"ease-out"});
+      return;
+    }
+    const dy = prev.top - now.top;
+    if(Math.abs(dy) > 0.5){
+      el.animate([{transform:`translateY(${dy}px)`},{transform:"translateY(0)"}], {duration:340, easing:"cubic-bezier(.2,.7,.2,1)"});
+    }
+  });
+}
+
+function renderStream(){
+  const list = funnelTasks();
+  const maxW = 9;
+  stream.innerHTML = "";
+  if(list.length === 0 && !activeTask()){
+    stream.innerHTML = `<li class="empty">Nothing in the funnel. Enjoy it, or drop something in.</li>`;
+    return;
+  }
+  list.forEach((t, i) => {
+    const w = weightOf(t);
+    const li = document.createElement("li");
+    li.className = "card" + (i === list.length - 1 ? " card--next" : "");
+    li.dataset.id = t.id;
+    li.style.setProperty("--depth", (w / maxW).toFixed(3));
+    li.style.setProperty("--hue", hueFor(w));
+    li.style.position = "relative";
+    const isNext = i === list.length - 1;
+    li.innerHTML = `
+      <button class="card__body" data-act="edit" data-id="${t.id}">
+        ${isNext ? `<span class="card__nexttag">next through the neck</span>` : ""}
+        <span class="card__title">${esc(t.title)}</span>
+        ${chips(t)}
+        ${t.notes ? `<span class="card__note">${esc(t.notes)}</span>` : ""}
+      </button>
+      <div class="card__side">
+        <span class="card__weight">${w}<span>weight</span></span>
+        <button class="card__pickup" data-act="pickup" data-id="${t.id}" ${activeTask() ? "disabled" : ""}>Pick up</button>
+      </div>`;
+    stream.appendChild(li);
+  });
+}
+
+function renderThroat(){
+  const t = activeTask();
+  if(t){
+    throatEl.className = "throat throat--active";
+    throatEl.dataset.id = t.id;
+    throatEl.style.setProperty("--hue", hueFor(weightOf(t)));
+    throatEl.innerHTML = `
+      <span class="throat__label">In the throat · weight ${weightOf(t)}</span>
+      <h3>${esc(t.title)}</h3>
+      ${chips(t)}
+      ${t.notes ? `<p class="throat__note">${esc(t.notes)}</p>` : ""}
+      <div class="throat__actions">
+        <button class="btn-done" data-act="done" data-id="${t.id}">Done — push through</button>
+        <button class="btn-ghost" data-act="putback" data-id="${t.id}">Put back</button>
+        <button class="btn-ghost" data-act="edit" data-id="${t.id}">Edit</button>
+      </div>`;
+    return;
+  }
+  throatEl.className = "throat";
+  const next = funnelTasks().at(-1);
+  if(next){
+    throatEl.innerHTML = `
+      <span class="throat__label">Throat is open</span>
+      <p class="throat__rec">Recommended next: <b>${esc(next.title)}</b> · weight ${weightOf(next)}</p>
+      <div class="throat__actions">
+        <button class="btn-done" data-act="pickup" data-id="${next.id}">Pick it up</button>
+      </div>`;
+  }else{
+    throatEl.innerHTML = `<span class="throat__empty">The funnel's clear.</span>`;
+  }
+}
+
+function renderDone(){
+  const all = doneTasks();
+  doneListEl.innerHTML = "";
+  if(all.length === 0){
+    doneListEl.innerHTML = `<li class="empty">Nothing decanted yet.</li>`;
+    seeMoreBtn.hidden = true;
+    return;
+  }
+  const todays = all.filter(t => isToday(t.closedAt));
+  const earlier = all.filter(t => !isToday(t.closedAt));
+  const visible = showAllDone ? all : todays;
+
+  if(visible.length === 0 && !showAllDone){
+    doneListEl.innerHTML = `<li class="empty">Nothing pushed through today.</li>`;
+  }else{
+    let lastLabel = null;
+    visible.forEach(t => {
+      const label = dayLabel(t.closedAt);
+      if(showAllDone && label !== lastLabel){
+        const h = document.createElement("li");
+        h.className = "done-group";
+        h.textContent = label;
+        doneListEl.appendChild(h);
+        lastLabel = label;
+      }
+      const li = document.createElement("li");
+      li.className = "done-item";
+      li.dataset.id = t.id;
+      li.innerHTML = `
+        <button class="done-item__body" data-act="edit" data-id="${t.id}">
+          <span class="done-item__title">${esc(t.title)}</span>
+          <span class="done-item__time">${timeLabel(t.closedAt)}</span>
+        </button>
+        <button class="done-item__reopen" data-act="reopen" data-id="${t.id}" title="Reopen" aria-label="Reopen task">↩</button>`;
+      doneListEl.appendChild(li);
+    });
+  }
+
+  if(earlier.length > 0){
+    seeMoreBtn.hidden = false;
+    seeMoreBtn.textContent = showAllDone ? "See less" : `See ${earlier.length} earlier`;
+  }else{
+    seeMoreBtn.hidden = true;
+  }
+}
+
+function renderStats(){
+  const f = funnelTasks().length;
+  const a = activeTask() ? 1 : 0;
+  const d = doneTasks().filter(t => isToday(t.closedAt)).length;
+  statsEl.innerHTML = `<span>funnel <b>${f}</b></span><span>throat <b>${a}/1</b></span><span>done today <b>${d}</b></span>`;
+}
+
+function chips(t){
+  const parts = [];
+  if(t.delegable) parts.push(`<span class="chip">delegable</span>`);
+  if(t.urgent)    parts.push(`<span class="chip">urgent</span>`);
+  if(t.important) parts.push(`<span class="chip">important</span>`);
+  return parts.length ? `<span class="card__meta">${parts.join("")}</span>` : "";
+}
+
+/* ============================================================
+   Dates
+   ============================================================ */
+const isToday = ts => {
+  if(!ts) return false;
+  const d = new Date(ts), n = new Date();
+  return d.getFullYear()===n.getFullYear() && d.getMonth()===n.getMonth() && d.getDate()===n.getDate();
+};
+function dayLabel(ts){
+  const d = new Date(ts), n = new Date();
+  const diff = Math.round((startOfDay(n) - startOfDay(d)) / 86400000);
+  if(diff === 0) return "Today";
+  if(diff === 1) return "Yesterday";
+  return d.toLocaleDateString(undefined, { weekday:"short", month:"short", day:"numeric" });
+}
+const startOfDay = d => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+const timeLabel = ts => new Date(ts).toLocaleTimeString(undefined, { hour:"numeric", minute:"2-digit" });
+
+/* ============================================================
+   Toast
+   ============================================================ */
+const toastEl = $("#toast");
+function showToast(msg, action){
+  clearTimeout(toastTimer);
+  toastEl.innerHTML = "";
+  toastEl.append(document.createTextNode(msg));
+  if(action){
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = action.label;
+    b.addEventListener("click", action.action);
+    toastEl.appendChild(b);
+  }
+  toastEl.hidden = false;
+  toastTimer = setTimeout(hideToast, 6000);
+}
+function hideToast(){ toastEl.hidden = true; clearTimeout(toastTimer); }
+
+/* ============================================================
+   Editor dialog
+   ============================================================ */
+const editor = $("#editor");
+const edTitle = $("#edTitle"), edNotes = $("#edNotes");
+const edImp = $("#edImp"), edUrg = $("#edUrg"), edDel = $("#edDel");
+
+function openEditor(id){
+  const t = byId(id); if(!t) return;
+  editingId = id;
+  edTitle.value = t.title;
+  edNotes.value = t.notes;
+  edImp.checked = t.important;
+  edUrg.checked = t.urgent;
+  edDel.checked = t.delegable;
+  editor.showModal();
+  edTitle.focus();
+}
+$("#editor form").addEventListener("submit", () => {
+  if(!editingId) return;
+  saveEdit(editingId, {
+    title: edTitle.value || "Untitled",
+    notes: edNotes.value,
+    important: edImp.checked, urgent: edUrg.checked, delegable: edDel.checked,
+  });
+  editingId = null;
+});
+$("#edCancel").addEventListener("click", () => { editingId = null; editor.close(); });
+$("#edDelete").addEventListener("click", () => {
+  if(editingId && confirm("Delete this task for good?")){
+    deleteTask(editingId);
+    editingId = null;
+    editor.close();
+  }
+});
+
+/* ============================================================
+   Events — composer, delegated clicks, keyboard, backup, theme
+   ============================================================ */
+const composer = $("#composer");
+const newTitle = $("#newTitle"), newNotes = $("#newNotes");
+const newImp = $("#newImp"), newUrg = $("#newUrg"), newDel = $("#newDel");
+const newWeightEl = $("#newWeight");
+
+function refreshNewWeight(){
+  const w = (newImp.checked?1:0) + (newUrg.checked?3:0) + (newDel.checked?5:0);
+  newWeightEl.textContent = w;
+  newWeightEl.style.setProperty("--wh", hueFor(w));
+}
+[newImp, newUrg, newDel].forEach(el => el.addEventListener("change", refreshNewWeight));
+
+composer.addEventListener("submit", e => {
+  e.preventDefault();
+  if(!newTitle.value.trim()) return;
+  addTask({
+    title:newTitle.value, notes:newNotes.value,
+    important:newImp.checked, urgent:newUrg.checked, delegable:newDel.checked,
+  });
+  composer.reset();
+  refreshNewWeight();
+  newTitle.focus();
+});
+
+document.body.addEventListener("click", e => {
+  const btn = e.target.closest("[data-act]");
+  if(!btn) return;
+  const id = btn.dataset.id;
+  switch(btn.dataset.act){
+    case "pickup":  pickUp(id); break;
+    case "putback": putBack(id); break;
+    case "done":    markDone(id); break;
+    case "reopen":  reopen(id); break;
+    case "edit":    openEditor(id); break;
+  }
+});
+
+seeMoreBtn.addEventListener("click", () => { showAllDone = !showAllDone; render(); });
+
+document.addEventListener("keydown", e => {
+  if(e.key === "n" && !/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName) && !editor.open){
+    e.preventDefault();
+    newTitle.focus();
+  }
+});
+
+/* ---- export / import ---- */
+$("#exportBtn").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type:"application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `task-funnel-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+$("#importBtn").addEventListener("click", () => $("#importFile").click());
+$("#importFile").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const data = JSON.parse(await file.text());
+    if(!data || !Array.isArray(data.tasks)) throw new Error("bad shape");
+    const replace = confirm(`Import ${data.tasks.length} task(s).\n\nOK = replace everything here.\nCancel = merge with what's here.`);
+    const incoming = normalize(data).tasks;
+    if(replace){
+      state = { version:1, tasks:incoming };
+    }else{
+      const ids = new Set(state.tasks.map(t => t.id));
+      state.tasks.push(...incoming.filter(t => !ids.has(t.id)));
+      state = normalize(state);
+    }
+    commit();
+    showToast("Import complete.");
+  }catch(err){
+    showToast("That file didn't look like a Task Funnel export.");
+  }
+  e.target.value = "";
+});
+
+/* ---- theme ---- */
+const themeBtn = $("#themeBtn");
+function applyStoredTheme(){
+  const saved = localStorage.getItem(THEME_KEY);
+  if(saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+}
+themeBtn.addEventListener("click", () => {
+  const cur = document.documentElement.dataset.theme
+    || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  try{ localStorage.setItem(THEME_KEY, next); }catch(err){}
+});
+
+/* ============================================================
+   Utilities + boot
+   ============================================================ */
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+
+applyStoredTheme();
+refreshNewWeight();
+render();
+</script>
+</body>
+</html>
